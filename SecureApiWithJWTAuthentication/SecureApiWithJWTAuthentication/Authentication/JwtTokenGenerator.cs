@@ -1,54 +1,61 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.Extensions.Options;
 using SecureApiWithJWTAuthentication.Entities;
 using SecureApiWithJWTAuthentication.Models;
 using SecureApiWithJWTAuthentication.Services;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
+
 
 namespace SecureApiWithJWTAuthentication.Authentication
 {
     public class JwtTokenGenerator : IJwtTokenService
     {
         private readonly IUserServices _userServices;
-        private readonly IConfiguration _config;
+        private readonly SigningConfiguration _signingConfiguration;
+        private readonly JwtConfiguration _jwtConfiguration;
 
-        public JwtTokenGenerator(IUserServices userServices, IConfiguration config)
+        public JwtTokenGenerator(IUserServices userServices, SigningConfiguration signingConfiguration, IOptions<JwtConfiguration> jwtConfiguration)
         {
             _userServices = userServices;
-            _config = config ?? throw new ArgumentNullException(nameof(config));
+            _signingConfiguration = signingConfiguration;
+            _jwtConfiguration = jwtConfiguration.Value;
         }
 
-
-        public string GenerateToken(AuthenticationCredentials authenticationCredentials)
+        public async Task<string> GenerateToken(AuthenticationCredentials authenticationCredentials)
         {
-            var user = ValidateUserInfo(authenticationCredentials.UserName, authenticationCredentials.Password);
+            var user = await ValidateUserInfo(authenticationCredentials.UserName, authenticationCredentials.Password);
             if (user == null)
             {
                 return null;
             }
-            var securityKey = new SymmetricSecurityKey(
-                Encoding.ASCII.GetBytes(_config["JWT:Secret"]));
-            var signingCredentials = new SigningCredentials(
-                securityKey, SecurityAlgorithms.HmacSha256);
-            var claims = new List<Claim>();
-            claims.Add(new Claim("sub", user.Id.ToString()));
-      
-                
-            
 
+            var claims = new List<Claim>
+            {
+                new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new(JwtRegisteredClaimNames.GivenName, user.FirstName),
+                new(JwtRegisteredClaimNames.FamilyName, user.LastName)
+            };
 
-        }
-
-
-        public bool VerifyToken(string token)
-        {
-            throw new NotImplementedException();
+            var jwtSecurityToken = new JwtSecurityToken(
+                _jwtConfiguration.Issuer,
+                _jwtConfiguration.Audience,
+                claims,
+                DateTime.UtcNow,
+                DateTime.UtcNow.AddHours(_jwtConfiguration.TokenExpiryHours),
+                _signingConfiguration.SigningCredentials
+            ) ;
+            var token = new JwtSecurityTokenHandler().WriteToken(jwtSecurityToken);
+            return token;
         }
 
         private async Task<User?> ValidateUserInfo(string? userName, string? password)
         {
             var user = await _userServices.ValidateUserCredentials(userName, password);
             return user;
-        }   
+        }
+        public async Task<bool> VerifyToken(string token)
+        {
+
+        }
     }
 }
