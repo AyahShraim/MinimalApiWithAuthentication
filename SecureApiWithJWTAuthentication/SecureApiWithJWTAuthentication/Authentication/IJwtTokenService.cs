@@ -4,7 +4,7 @@ namespace SecureApiWithJWTAuthentication.Authentication
 {
     public interface IJwtTokenService
     {
-        string GenerateToken(AuthenticationCredentials authenticationCredentials);
-        bool VerifyToken(string token);
+        Task<string> GenerateToken(AuthenticationCredentials authenticationCredentials);
+        Task<bool> VerifyToken(string token);
     }
 }
