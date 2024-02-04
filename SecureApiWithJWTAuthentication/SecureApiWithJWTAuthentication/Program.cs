@@ -1,9 +1,14 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using SecureApiWithJWTAuthentication.Authentication;
 using SecureApiWithJWTAuthentication.DbContexts;
 using SecureApiWithJWTAuthentication.Models;
 using SecureApiWithJWTAuthentication.Services;
 using Serilog;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 
 Log.Logger = new LoggerConfiguration()
@@ -31,12 +36,44 @@ builder.Services.AddSingleton(provider =>
     return new SigningConfiguration(builder.Configuration["JWT:Secret"]);
 
 });
-builder.Services.Configure<JwtConfiguration>(options => builder.Configuration.GetSection("JWT"));
+builder.Services.Configure<JwtConfiguration>(options => builder.Configuration.GetSection("JWT").Bind(options));
 builder.Services.AddScoped<IJwtTokenService, JwtTokenGenerator>();
+
+var jwtConfiguration = builder.Services.BuildServiceProvider().GetService<IOptions<JwtConfiguration>>().Value;
+Log.Information($"Issuer: {jwtConfiguration?.Issuer}, Audience: {jwtConfiguration?.Audience}, Secret: {jwtConfiguration?.Secret}");
+
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new()
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtConfiguration.Issuer,
+            ValidAudience = jwtConfiguration.Audience,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.ASCII.GetBytes(jwtConfiguration.Secret))
+        };
+
+    });
 
 var app = builder.Build();
 
-app.MapGet("/", () => "Hello World!");
+
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
+
+
 app.MapPost("/Login", async (IJwtTokenService tokenService, AuthenticationCredentials authenticationCredentials) =>
 {
     var token = await tokenService.GenerateToken(authenticationCredentials);
@@ -47,22 +84,12 @@ app.MapPost("/Login", async (IJwtTokenService tokenService, AuthenticationCreden
     return Results.Ok(token);
 });
 
+app.MapGet("/welcome", (ClaimsPrincipal user) =>
+{
+    var firstName = user.FindFirst(ClaimTypes.GivenName)?.Value;
+    var message = $"Hey  {firstName} ! Welcome to the Api :)";
+    return Results.Ok(message);
+}).RequireAuthorization();
+
 app.Run();
 
-//var jwtConfiguration = builder.Services.BuildServiceProvider().GetService<JwtConfiguration>();
-
-//builder.Services.AddAuthentication("Bearer")
-//    .AddJwtBearer(options =>
-//    {
-//        options.TokenValidationParameters = new()
-//        {
-//            ValidateIssuer = true,
-//            ValidateAudience = true,
-//            ValidateIssuerSigningKey = true,
-//            ValidIssuer = jwtConfiguration.Issuer,
-//            ValidAudience = jwtConfiguration.Audience,
-//            IssuerSigningKey = new SymmetricSecurityKey(
-//                Encoding.ASCII.GetBytes(jwtConfiguration.Secret))
-//        };
-
-//    });
