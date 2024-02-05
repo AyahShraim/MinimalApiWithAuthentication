@@ -5,8 +5,13 @@ using SecureApiWithJWTAuthentication.Models;
 
 namespace SecureApiWithJWTAuthentication.Modules
 {
+    /// <summary>
+    /// Module for handling user related endpoints
+    /// </summary>
+    
     public class UserModule : ICarterModule
     {
+  
         public void AddRoutes(IEndpointRouteBuilder app)
         {
             var VersionSet = app.NewApiVersionSet()
@@ -14,6 +19,12 @@ namespace SecureApiWithJWTAuthentication.Modules
                         .ReportApiVersions()
                         .Build();
 
+            /// <summary>
+            /// End point for user login and token generation
+            /// <param name="tokenService">Service for JWT token generation</param>
+            /// <param name="authenticationCredentials">user authentication Credentials</param>
+            /// <returns>Returns an HTTP Unauthorized result if token generation fails; otherwise, returns an HTTP OK result with the generated token.</returns>
+            /// </summary>
             app.MapPost("/Login", async (IJwtTokenService tokenService, AuthenticationCredentials authenticationCredentials) =>
             {
                 var token = await tokenService.GenerateToken(authenticationCredentials);

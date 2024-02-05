@@ -4,9 +4,12 @@ using System.Security.Claims;
 
 namespace SecureApiWithJWTAuthentication.Modules
 {
+    /// <summary>
+    /// module for general API endpoints to test authorization 
+    /// </summary>
+
     public class GeneralModule : ICarterModule
     {
-
         public void AddRoutes(IEndpointRouteBuilder app)
         {
             var VersionSet = app.NewApiVersionSet()
@@ -14,6 +17,10 @@ namespace SecureApiWithJWTAuthentication.Modules
                                 .ReportApiVersions()
                                 .Build();
 
+            /// <summary>
+            /// Get a welcome message for the authenticated user.
+            /// </summary>
+            /// <returns>Returns an HTTP OK result with a welcome message for the authenticated user.</returns>
             app.MapGet("/welcome", (ClaimsPrincipal user) =>
             {
                 var firstName = user.FindFirst(ClaimTypes.GivenName)?.Value;
@@ -23,6 +30,12 @@ namespace SecureApiWithJWTAuthentication.Modules
             }).RequireAuthorization()
             .WithApiVersionSet(VersionSet)
             .MapToApiVersion(new ApiVersion(1.0));
+
+
+            /// <summary>
+            /// Get a special resource for the first member in the system.
+            /// </summary>
+            /// <returns>Returns an HTTP OK result with a message for the special resource.</returns>
 
             app.MapGet("/specialResource", (ClaimsPrincipal user) =>
             {
