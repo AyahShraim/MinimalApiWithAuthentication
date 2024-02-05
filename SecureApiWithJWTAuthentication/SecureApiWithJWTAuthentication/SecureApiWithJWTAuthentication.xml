@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SecureApiWithJWTAuthentication</name>
+    </assembly>
+    <members>
+        <member name="T:SecureApiWithJWTAuthentication.Models.AuthenticationCredentials">
+            <summary>
+            Represents the credentials for user authentication 
+            </summary>
+        </member>
+        <member name="P:SecureApiWithJWTAuthentication.Models.AuthenticationCredentials.UserName">
+            <summary>
+            the user name for authentication the user
+            </summary>
+        </member>
+        <member name="P:SecureApiWithJWTAuthentication.Models.AuthenticationCredentials.Password">
+            <summary>
+            the password for authentication the user
+            </summary>
+        </member>
+        <member name="T:SecureApiWithJWTAuthentication.Modules.GeneralModule">
+            <summary>
+            module for general API endpoints to test authorization 
+            </summary>
+        </member>
+        <member name="T:SecureApiWithJWTAuthentication.Modules.UserModule">
+            <summary>
+            Module for handling user related endpoints
+            </summary>
+        </member>
+    </members>
+</doc>
