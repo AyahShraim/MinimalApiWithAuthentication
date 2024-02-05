@@ -1,6 +1,9 @@
-﻿namespace SecureApiWithJWTAuthentication.Services
+﻿using SecureApiWithJWTAuthentication.Entities;
+
+namespace SecureApiWithJWTAuthentication.Services
 {
-    public class IUserServices
+    public interface IUserServices 
     {
+        Task<User?> ValidateUserCredentials(string username, string password);
     }
 }

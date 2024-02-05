@@ -21,7 +21,7 @@ namespace SecureApiWithJWTAuthentication.Authentication
         {
             _userServices = userServices;
             _signingConfiguration = signingConfiguration;
-            _jwtConfiguration = jwtConfiguration.Value;
+            _jwtConfiguration = jwtConfiguration?.Value ?? throw new ArgumentNullException(nameof(jwtConfiguration), "JwtConfiguration must not be null.");
             _logger = logger;
         }
 
