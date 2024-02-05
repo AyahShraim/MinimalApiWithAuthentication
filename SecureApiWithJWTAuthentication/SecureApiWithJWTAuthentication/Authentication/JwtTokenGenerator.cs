@@ -37,9 +37,9 @@ namespace SecureApiWithJWTAuthentication.Authentication
 
                 var claims = new List<Claim>
                 {
-                    new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                    new(JwtRegisteredClaimNames.GivenName, user.FirstName),
-                    new(JwtRegisteredClaimNames.FamilyName, user.LastName)
+                    new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new(ClaimTypes.GivenName, user.FirstName),
+                    new(ClaimTypes.Surname, user.LastName)
                 };
 
                 var jwtSecurityToken = new JwtSecurityToken(

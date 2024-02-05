@@ -94,7 +94,8 @@ app.MapPost("/Login", async (IJwtTokenService tokenService, AuthenticationCreden
 app.MapGet("/welcome", (ClaimsPrincipal user) =>
 {
     var firstName = user.FindFirst(ClaimTypes.GivenName)?.Value;
-    var message = $"Hey  {firstName} ! Welcome to the Api :)";
+    var lastName = user.FindFirst(ClaimTypes.Surname)?.Value;
+    var message = $"Hey  {firstName} {lastName} ! Welcome to the Api :)";
     return Results.Ok(message);
 }).RequireAuthorization();
 
