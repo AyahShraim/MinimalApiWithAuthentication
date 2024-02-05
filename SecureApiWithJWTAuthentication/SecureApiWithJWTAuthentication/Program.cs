@@ -6,7 +6,6 @@ using SecureApiWithJWTAuthentication.DbContexts;
 using SecureApiWithJWTAuthentication.Models;
 using SecureApiWithJWTAuthentication.Services;
 using Serilog;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 
@@ -58,8 +57,16 @@ builder.Services.AddAuthentication("Bearer")
 
     });
 
-var app = builder.Build();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("MustBeFirstMemberInSystem", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+        policy.RequireClaim(ClaimTypes.NameIdentifier, "1");
+    });
+});
 
+var app = builder.Build();
 
 
 if (app.Environment.IsDevelopment())
@@ -90,6 +97,12 @@ app.MapGet("/welcome", (ClaimsPrincipal user) =>
     var message = $"Hey  {firstName} ! Welcome to the Api :)";
     return Results.Ok(message);
 }).RequireAuthorization();
+
+app.MapGet("/specialResource", (ClaimsPrincipal user) =>
+{
+    return Results.Ok("This is a special resource for the first member in the system.");
+}).RequireAuthorization("MustBeFirstMemberInSystem");
+
 
 app.Run();
 
